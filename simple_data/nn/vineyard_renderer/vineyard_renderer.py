@@ -13,7 +13,7 @@ leaf_positions = np.load(os.path.join(prefix, LEAF_POSITIONS_PATH))
 num_leaves = leaf_positions.shape[1]
 
 
-def draw_vineyard(dry_vines, ill_vines, path, leaf_positions=leaf_positions):
+def draw_vineyard(dry_vines, ill_vines, leaf_positions=leaf_positions):
     filtered_leaf_positions = np.array([
         leaf_positions[i][np.random.choice(num_leaves, num_leaves // 2)] if not dry_vines[i % 10]
         else leaf_positions[i]

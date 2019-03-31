@@ -141,7 +141,7 @@ def plot_state(self):
 
     health_states = [get_sensor_health_state(i) for i in range(10)]
 
-    canvas = draw_vineyard(sensors, health_states, 'plot.png')
+    canvas = draw_vineyard(sensors, health_states)
     response = HttpResponse(content_type='image/jpg')
     canvas.print_jpg(response)
     return response

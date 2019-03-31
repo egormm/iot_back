@@ -112,7 +112,7 @@ class Vineyard(object):
     def __init__(self, leaf_positions, dry_vines, ill_vines):
         # Create new Figure and an Axes which fills it.
         self.bounds = [[0, 100], [0, 100]]
-        self.fig = plt.figure(figsize=(6, 6))
+        self.fig = plt.figure(figsize=(16, 16))
         gs = gridspec.GridSpec(1, 1)
         self.ax1 = plt.subplot(gs[0])
         self.ax1.set_aspect('equal')
