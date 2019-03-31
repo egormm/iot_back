@@ -1,6 +1,8 @@
 from rest_framework.views import APIView
 from .serializers import SensorSerializer
 from .models import Sensor
+from .nn.vineyard_renderer.vineyard_renderer import *
+from .nn.disease_detector.disease_detector import *
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
@@ -67,7 +69,6 @@ def state(self):
     M_period = timedelta(hours=12)
     now = datetime.now()
     T_MIN = 5
-    
     T_MAX_30_DAYS = 480
     M_MAX = 0.3
     M_MIN = 0.2
@@ -117,3 +118,31 @@ def state(self):
             state_description = "Неблагоприятные условия на участках " + ', '.join(map(str, sorted(bad)))
     return Response({"state_description": state_description, "is_ok": is_ok,
                      "sensors": sensors})
+
+
+@api_view(['Get'])
+def plot_state():
+    M_period = timedelta(hours=12)
+    now = datetime.now()
+    M_MAX = 0.3
+    M_MIN = 0.2
+    sum_M = [0 for _ in range(10)]
+    cm = 0
+    sensors = [True for _ in range(10)]
+    dd = now - M_period
+    for el in Sensor.objects.filter(date__lte=now, date__gte=dd):
+        if sensors[el.sensor_id]:
+            if el.vw_30cm > M_MAX:
+                sensors[el.sensor_id] = False
+            sum_M[el.sensor_id] += el.vw_30cm
+            cm += 1
+    for i in range(10):
+        if sum_M[i] / (cm / 10) < M_MIN:
+            sensors[i] = False
+
+    health_states = [get_sensor_health_state(i) for i in range(10)]
+
+    canvas = draw_vineyard(sensors, health_states, 'plot.png')
+    response = HttpResponse(content_type='image/jpg')
+    canvas.print_jpg(response)
+    return response
