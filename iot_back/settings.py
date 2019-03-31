@@ -25,7 +25,10 @@ SECRET_KEY = '*$1u+9)9g)(56)6=k9who10-mjw2nc3=6lvii$voramd*9o79k'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['100.100.153.173']
+ALLOWED_HOSTS = [
+    '100.100.153.173',
+    '127.0.0.1'
+]
 
 # Application definition
 
@@ -123,7 +126,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)

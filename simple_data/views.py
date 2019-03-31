@@ -1,10 +1,11 @@
 from rest_framework.views import APIView
 from .serializers import SensorSerializer
 from .models import Sensor
-from django.utils import timezone
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import NotFound
+from django.http import HttpResponse
+from datetime import datetime, timezone, timedelta
 
 
 def check_url(*, days, id_sensor):
@@ -17,9 +18,9 @@ def check_url(*, days, id_sensor):
 class DailyData(APIView):
     def get(self, request, days, id_sensor):
         check_url(days=days, id_sensor=id_sensor)
-        d = timezone.now() - timezone.timedelta(days=days)
+        d = datetime.now() - timedelta(days=days)
         dd = Sensor.objects.filter(
-            date__gte=d, date__lte=timezone.now(), sensor_id__exact=id_sensor).all()
+            date__gte=d, date__lte=datetime.now(), sensor_id__exact=id_sensor).all()
         serializer = SensorSerializer(dd, many=True)
         responce = Response(serializer.data)
         return responce
@@ -30,8 +31,6 @@ def plot(request, id_sensor, days, pltype):
     check_url(days=days, id_sensor=id_sensor)
     if pltype != 'moist' and pltype != 'temp':
         raise NotFound(detail='only \'moist\' and \'temp\' are available', code=404)
-    from django.http import HttpResponse
-    import datetime
 
     from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
     from matplotlib.figure import Figure
@@ -42,9 +41,9 @@ def plot(request, id_sensor, days, pltype):
     x = []
     y1 = []
     y2 = []
-    now = datetime.datetime.now()
+    now = datetime.now()
     for el in Sensor.objects.filter(
-            date__gte=now - datetime.timedelta(days=days), date__lte=now, sensor_id__exact=id_sensor):
+            date__gte=now - timedelta(days=days), date__lte=now, sensor_id__exact=id_sensor):
         x.append(el.date)
         if pltype == 'moist':
             y1.append(el.vw_30cm)
@@ -62,7 +61,58 @@ def plot(request, id_sensor, days, pltype):
     return response
 
 
-class Simple(APIView):
-    def get(self, request):
-        return Response({"state_description": "Сухость на участке 3", "is_ok": False,
-                         "sensors": [True, False, True, True, True, True, True, True, True, True]})
+@api_view(['Get'])
+def state(self):
+    T_period = timedelta(days=30)
+    M_period = timedelta(hours=12)
+    now = datetime.now()
+    T_MIN = 5
+    T_MAX_30_DAYS = 480
+    M_MAX = 0.3
+    M_MIN = 0.2
+    sum_T = [0 for _ in range(10)]
+    ct = 0
+    sum_M = [0 for _ in range(10)]
+    cm = 0
+    sensors = [True for _ in range(10)]
+    is_ok = True
+    bad = set()
+    d = now - T_period
+    dd = now - M_period
+    for el in Sensor.objects.filter(date__lte=now, date__gte=d):
+        if sensors[el.sensor_id]:
+            if el.t_60cm < T_MIN:
+                sensors[el.sensor_id] = False
+                is_ok = False
+                bad.add(el.sensor_id+1)
+            sum_T[el.sensor_id] += el.t_60cm
+            ct += 1
+
+    for el in Sensor.objects.filter(date__lte=now, date__gte=dd):
+        if sensors[el.sensor_id]:
+            if el.vw_30cm > M_MAX:
+                sensors[el.sensor_id] = False
+                is_ok = False
+                bad.add(el.sensor_id+1)
+            sum_M[el.sensor_id] += el.vw_30cm
+            cm += 1
+
+    for i in range(10):
+        if sum_T[i]/(ct/10) > T_MAX_30_DAYS:
+            sensors[i] = False
+            is_ok = False
+            bad.add(i+1)
+        if sum_M[i]/(cm/10) < M_MIN:
+            sensors[i] = False
+            is_ok = False
+            bad.add(i+1)
+
+    if is_ok:
+        state_description = "Все хорошо!"
+    else:
+        if len(bad) == 1:
+            state_description = "Неблагоприятные условия на участке " + str(bad[0])
+        else:
+            state_description = "Неблагоприятные условия на участках " + ', '.join(map(str, sorted(bad)))
+    return Response({"state_description": state_description, "is_ok": is_ok,
+                     "sensors": sensors})
