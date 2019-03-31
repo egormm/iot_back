@@ -52,3 +52,19 @@ def get_sensor_health_state(sensor_id, binary_only=True):
         'state': len(diseases) == 0,
         'state_description': state_description
     }
+
+
+def get_health_states():
+    diseases = []
+    states = []
+    for i in range(10):
+        disease = get_diseases(i)
+        states.append(bool(disease))
+        diseases += disease
+    if len(diseases) == 0:
+        state_description = 'Растения здоровы.'
+    elif len(diseases) == 1:
+        state_description = 'Обнаружена болезнь %s.' % diseases[0]
+    else:
+        state_description = 'Обнарежны болезни ' + ', '.join(diseases) + '.'
+    return states, state_description

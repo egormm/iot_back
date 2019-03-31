@@ -109,6 +109,12 @@ def state(self):
             is_ok = False
             bad.add(i+1)
 
+    health_states, heath_state_description = get_health_states
+    for i, state in health_states:
+        if not state:
+            sensors[i] = False
+            is_ok = False
+
     if is_ok:
         state_description = "Все хорошо!"
     else:
@@ -116,6 +122,8 @@ def state(self):
             state_description = "Неблагоприятные условия на участке " + str(bad[0])
         else:
             state_description = "Неблагоприятные условия на участках " + ', '.join(map(str, sorted(bad)))
+        state_description += '\n'
+        state_description += heath_state_description
     return Response({"state_description": state_description, "is_ok": is_ok,
                      "sensors": sensors})
 
