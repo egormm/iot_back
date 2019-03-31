@@ -67,6 +67,7 @@ def state(self):
     M_period = timedelta(hours=12)
     now = datetime.now()
     T_MIN = 5
+    
     T_MAX_30_DAYS = 480
     M_MAX = 0.3
     M_MIN = 0.2
