@@ -52,8 +52,9 @@ def plot(request, id_sensor, days, pltype):
         else:
             y1.append(el.t_30cm)
             y2.append(el.t_60cm)
-    ax.plot_date(x, y1, 'r-')
-    ax.plot_date(x, y2, '-')
+    ax.plot_date(x, y1, 'r-', label='глубина 30 см')
+    ax.plot_date(x, y2, '-', label='глубина 60 см')
+    ax.legend()
     ax.xaxis.set_major_formatter(DateFormatter('%Y-%m-%d'))
     fig.autofmt_xdate()
     canvas = FigureCanvas(fig)
