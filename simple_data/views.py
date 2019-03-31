@@ -9,7 +9,6 @@ from rest_framework.exceptions import NotFound
 from django.http import HttpResponse
 from datetime import datetime, timezone, timedelta
 
-
 def check_url(*, days, id_sensor):
     if days < 1 or days > 90:
         raise NotFound(detail='maximum period = 90days, minimum = 1day', code=404)
@@ -121,7 +120,7 @@ def state(self):
 
 
 @api_view(['Get'])
-def plot_state():
+def plot_state(self):
     M_period = timedelta(hours=12)
     now = datetime.now()
     M_MAX = 0.3
