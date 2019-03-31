@@ -8,11 +8,10 @@ from rest_framework.exceptions import NotFound
 
 
 def check_url(*, days, id_sensor):
-    if days<1 or days>90:
+    if days < 1 or days > 90:
         raise NotFound(detail='maximum period = 90days, minimum = 1day', code=404)
-    if id_sensor<0 or id_sensor>9:
+    if id_sensor < 0 or id_sensor > 9:
         raise NotFound(detail='numbers of sensors from 0 to 9, included', code=404)
-
 
 
 class DailyData(APIView):
@@ -22,7 +21,8 @@ class DailyData(APIView):
         dd = Sensor.objects.filter(
             date__gte=d, date__lte=timezone.now(), sensor_id__exact=id_sensor).all()
         serializer = SensorSerializer(dd, many=True)
-        return Response(serializer.data)
+        responce = Response(serializer.data)
+        return responce
 
 
 @api_view(['Get'])
@@ -61,6 +61,8 @@ def plot(request, id_sensor, days, pltype):
     canvas.print_jpg(response)
     return response
 
+
 class Simple(APIView):
     def get(self, request):
-        return Response({"state_description":"Сухость на участке 3","is_ok":False,"sensors":[True,False,True,True,True,True,True,True,True,True]})
+        return Response({"state_description": "Сухость на участке 3", "is_ok": False,
+                         "sensors": [True, False, True, True, True, True, True, True, True, True]})
